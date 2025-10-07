@@ -1,7 +1,6 @@
 # Wing external-aero automation (PyFluent)
 
 Automates **CAD → mesh → solve** in Ansys Fluent for a **generic wing** (We will start with generic wing at the moment).  
-> Not for weapons or missile components.
 
 ## Requirements
 

@@ -1,5 +1,5 @@
-from config import MeshingConfig, SolverConfig
-from utils import speed_of_sound, u_inf_from_mach, first_layer_height_from_yplus
+from config import MeshingConfig
+from utils import u_inf_from_mach, first_layer_height_from_yplus
 from pathlib import Path
 import argparse
 

@@ -1,8 +1,13 @@
 from __future__ import annotations
 import argparse
 from pathlib import Path
+from datetime import datetime
+
 from .config import MeshingConfig, SolverConfig
 from .utils import first_layer_height_from_yplus, u_inf_from_mach
+from .logging_utils import get_logger
+
+log = get_logger()
 
 def parse_aoa_list(s: str):
     """
@@ -42,6 +47,8 @@ def main():
     p.add_argument("--ref-area", type=float, default=0.10, help="Reference area [m^2]")
     p.add_argument("--ref-length", type=float, default=0.30, help="Reference length [m]")
     p.add_argument("--iters", type=int, default=250, help="Iterations per AoA")
+    p.add_argument("--outdir", type=str, default="runs", help="Directory to store outputs")
+    p.add_argument("--save-per-aoa", action="store_true", help="Write case/data after each AoA")
     p.add_argument("--dry-run", action="store_true", help="Do not launch Fluent; just validate and print plan.")
     args = p.parse_args()
 
@@ -50,6 +57,9 @@ def main():
         raise SystemExit(f"CAD file not found: {cad_path}")
 
     aoa_list = parse_aoa_list(args.aoa)
+    run_dir = Path(args.outdir) / datetime.now().strftime("run_%Y%m%d_%H%M%S")
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir/"manifest.txt").write_text(str(vars(args)))
 
     # Meshing config
     mcfg = MeshingConfig(
@@ -97,14 +107,18 @@ def main():
         print("[dry-run] Wing walls:", ", ".join(scfg.wing_wall_zones))
         print("[dry-run] AoA list:", aoa_list)
         print("[dry-run] Mach/T∞/Pₒₚ:", scfg.mach, scfg.t_inf, scfg.p_op)
+        print("[dry-run] Output directory:", run_dir)
         return
 
+    log.info("Lanching meshing workflow: %s", mcfg.workflow)
     # Import heavy modules only if not dry-run
     from .meshing import build_mesh
     from .solver import solve_from_mesher_and_sweep
 
     meshing_session = build_mesh(mcfg)
     solve_from_mesher_and_sweep(meshing_session, scfg)
+
+    log.info("Completed meshing workflow: %s", mcfg.workflow)
 
 if __name__ == "__main__":
     main()

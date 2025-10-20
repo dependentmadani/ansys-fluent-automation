@@ -7,6 +7,7 @@ from .config import SolverConfig
 from .utils import u_inf_from_mach, rho_from_pT
 
 def _setup_physics(solver, cfg: SolverConfig):
+    # Turbulence model: k-omega SST
     visc = solver.setup.models.viscous
     visc.model = "k-omega"
     visc.k_omega_model = "sst"
@@ -16,6 +17,8 @@ def _setup_physics(solver, cfg: SolverConfig):
 
     air = solver.setup.materials.fluid["air"]
     air.density.option = "ideal-gas"
+    # Sutherland's law for viscosity is a model for calculating air's dynamic
+    # viscosity, which depends on temperature
     air.viscosity.option = "sutherland"
     air.viscosity.sutherland.option = "three-coefficient-method"
     air.viscosity.sutherland.reference_viscosity = 1.716e-5
